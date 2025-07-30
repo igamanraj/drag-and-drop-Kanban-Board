@@ -15,6 +15,7 @@ import {
 import { arrayMove, SortableContext } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import TaskCard from "./TaskCard";
+// import ThemeToggle from "./ThemeToggle";
 
 function KanBanBoard() {
   const [columns, setColumns] = useState<Columns[]>([]);
@@ -28,73 +29,91 @@ function KanBanBoard() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 3, //3px
+        distance: 3,
       },
     })
   );
 
-  console.log(columns);
-
   return (
-    <div className="m-auto flex min-h-screen w-full items-center overflow-x-auto overflow-y-hidden px-[40px] ">
-      <DndContext
-        sensors={sensors}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        onDragOver={onDragOver}
-      >
-        <div className="m-auto flex gap-2">
-          <div className="flex gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-8 transition-colors duration-300">
+      {/* <ThemeToggle /> */}
+      <div className="w-full">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">KanBan Board</h1>
+          <p className="text-gray-600 dark:text-gray-300">Organize and track your tasks efficiently</p>
+        </div>
+        
+        <DndContext
+          sensors={sensors}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          onDragOver={onDragOver}
+        >
+          {/* Center only when there are few columns, otherwise start from left */}
+          <div 
+            className={`flex gap-6 overflow-x-auto overflow-y-hidden pb-6 min-h-[520px] px-4 ${
+              columns.length <= 3 ? 'justify-center' : 'justify-start'
+            }`}
+            style={{ 
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#CBD5E1 transparent'
+            }}
+          >
             <SortableContext items={columnsId}>
               {columns.map((col) => (
+                <div key={col.id} className="flex-shrink-0">
+                  <ColumnContainer
+                    column={col}
+                    deleteColumn={deleteColumn}
+                    updateColumn={updateColumn}
+                    createTask={createTask}
+                    tasks={tasks.filter((task) => task.columnId === col.id)}
+                    deleteTask={deleteTask}
+                    updateTask={updateTask}
+                  />
+                </div>
+              ))}
+            </SortableContext>
+            
+            <div className="flex-shrink-0">
+              <button
+                className="h-[60px] w-[350px] cursor-pointer rounded-xl bg-white dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 p-4 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 flex gap-2 items-center justify-center font-medium transition-all duration-200 shadow-sm"
+                onClick={() => {
+                  createNewColumn();
+                }}
+              >
+                <PlusIcon /> Add Column
+              </button>
+            </div>
+          </div>
+          
+          {createPortal(
+            <DragOverlay>
+              {activeColumn && (
                 <ColumnContainer
-                  key={col.id}
-                  column={col}
+                  column={activeColumn}
                   deleteColumn={deleteColumn}
                   updateColumn={updateColumn}
                   createTask={createTask}
-                  tasks={tasks.filter((task) => task.columnId === col.id)}
+                  deleteTask={deleteTask}
+                  updateTask={updateTask}
+                  tasks={tasks.filter(
+                    (task) => task.columnId === activeColumn.id
+                  )}
+                />
+              )}
+              {activeTask && (
+                <TaskCard
+                  task={activeTask}
                   deleteTask={deleteTask}
                   updateTask={updateTask}
                 />
-              ))}
-            </SortableContext>
-          </div>
-          <button
-            className="h-[60px] w-[350px] min-w-[350px] cursor-pointer rounded-lg bg-mainBackgroundColor border-1 border-columnBackgroundColor p-4 ring-rose-500 hover:ring-2 flex gap-2"
-            onClick={() => {
-              createNewColumn();
-            }}
-          >
-            <PlusIcon /> Add Column
-          </button>
-        </div>
-        {createPortal(
-          <DragOverlay>
-            {activeColumn && (
-              <ColumnContainer
-                column={activeColumn}
-                deleteColumn={deleteColumn}
-                updateColumn={updateColumn}
-                createTask={createTask}
-                deleteTask={deleteTask}
-                updateTask={updateTask}
-                tasks={tasks.filter(
-                  (task) => task.columnId === activeColumn.id
-                )}
-              />
-            )}
-            {activeTask && (
-              <TaskCard
-                task={activeTask}
-                deleteTask={deleteTask}
-                updateTask={updateTask}
-              />
-            )}
-          </DragOverlay>,
-          document.body
-        )}
-      </DndContext>
+              )}
+            </DragOverlay>,
+            document.body
+          )}
+        </DndContext>
+      </div>
     </div>
   );
 
@@ -110,7 +129,7 @@ function KanBanBoard() {
     const newTask: Task = {
       id: generateId(),
       columnId: columnId,
-      content: `Task ${tasks.length + 1} `,
+      content: `Task ${tasks.length + 1}`,
     };
     setTasks([...tasks, newTask]);
   }
@@ -179,6 +198,7 @@ function KanBanBoard() {
       return arrayMove(columns, activeColumnIndex, overColumnIndex);
     });
   }
+  
   function onDragOver(event: DragOverEvent) {
     const { active, over } = event;
     if (!over) return;
@@ -190,7 +210,6 @@ function KanBanBoard() {
 
     const isActiveATask = active.data.current?.type === "Task";
     const isOverATask = over.data.current?.type === "Task";
-    // Droppin a task into over another task
 
     if(!isActiveATask) return;
     if (isActiveATask && isOverATask) {
@@ -198,9 +217,7 @@ function KanBanBoard() {
         const activeIndex = tasks.findIndex((t) => t.id === activeId);
         const overIndex = tasks.findIndex((t) => t.id === overId);
 
-        
-
-          tasks[overIndex].columnId = tasks[activeIndex].columnId;
+        tasks[overIndex].columnId = tasks[activeIndex].columnId;
 
         return arrayMove(tasks, activeIndex, overIndex);
       });
@@ -208,7 +225,6 @@ function KanBanBoard() {
 
     const isOverAColumn = over.data.current?.type === "Column";
 
-    // Dropping a task over a column
     if (isActiveATask && isOverAColumn){
          setTasks((tasks) => {
         const activeIndex = tasks.findIndex((t) => t.id === activeId);
@@ -217,9 +233,9 @@ function KanBanBoard() {
         return arrayMove(tasks, activeIndex, activeIndex);
       });
     }
-
   }
 }  
+
 function generateId() {
   return Math.floor(Math.random() * 10001);
 }

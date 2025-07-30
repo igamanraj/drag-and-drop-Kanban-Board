@@ -1,3 +1,4 @@
+
 import type { Id, Task } from "../types";
 import TrashIcon from "../icons/TrashIcon";
 import { useState } from "react";
@@ -17,7 +18,7 @@ function TasksCard({ task, deleteTask, updateTask }: Props) {
   const {setNodeRef, attributes, listeners, transform, transition, isDragging} =  useSortable({
       id: task.id,
       data:{
-        type:"task",
+        type:"Task",
         task,
       },
       disabled: editMode,
@@ -37,12 +38,10 @@ function TasksCard({ task, deleteTask, updateTask }: Props) {
     return (
       <div ref={setNodeRef}
       style={style}
-      className="bg-gray-900 p-2.5 h-[100px] min-h-[100px] items-center text-left rounded-xl border-2 border-rose-500 cursor-grab opacity-30"
+      className="bg-white dark:bg-gray-700 p-4 h-[100px] min-h-[100px] items-center text-left rounded-lg border-2 border-blue-400 cursor-grab opacity-50 shadow-lg"
       />
     );
   }
-
-
 
   if (editMode) {
     return (
@@ -51,15 +50,15 @@ function TasksCard({ task, deleteTask, updateTask }: Props) {
       style={style}
       {...attributes}
       {...listeners}
-        className="bg-gray-900 p-2.5 h-[100px] min-h-[100px] items-center text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-rose-500 cursor-grab"
+        className="bg-white dark:bg-gray-700 p-4 h-[100px] min-h-[100px] items-center text-left rounded-lg border-2 border-blue-500 cursor-grab shadow-sm"
       >
-        <textarea className="h-[90%] w-full resize-none focus:outline-none border-none rounded bg-transparent text-white" 
+        <textarea className="h-[90%] w-full resize-none focus:outline-none border-none rounded bg-transparent text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400" 
         value={task.content}
         autoFocus
         placeholder="Task Content Here"
         onBlur={toggleEditMode}
         onKeyDown={ (e) => {
-          if (e.key === "Enter" && e.shiftKey)toggleEditMode(); 
+          if (e.key === "Enter" && e.shiftKey) toggleEditMode(); 
         }}
         onChange={(e) => updateTask(task.id, e.target.value)}
       />
@@ -73,7 +72,7 @@ function TasksCard({ task, deleteTask, updateTask }: Props) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-gray-900 p-2.5 h-[100px] min-h-[100px] items-center text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-rose-500 cursor-grab relative task"
+      className="bg-white dark:bg-gray-700 p-4 h-[100px] min-h-[100px] items-center text-left rounded-lg hover:shadow-md hover:ring-2 hover:ring-blue-200 dark:hover:ring-blue-500 cursor-grab relative task transition-all duration-200 border border-gray-200 dark:border-gray-600"
       onMouseEnter={() => {
         setMouseIsOver(true);
       }}
@@ -82,13 +81,14 @@ function TasksCard({ task, deleteTask, updateTask }: Props) {
       }}
       onClick={toggleEditMode}
     >
-     <p className="my-auto h-[90%] width-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap text-white">
+     <p className="my-auto h-[90%] width-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap text-gray-800 dark:text-gray-200 text-sm leading-relaxed">
        {task.content}
      </p>
       {mouseIsOver && (
         <button
-          className="stroke-white absolute right-4 top-1/2 -translate-y-1/2 bg-gray-800 p-1.5 rounded opacity-60 hover:opacity-100"
-          onClick={() => {
+          className="stroke-gray-500 hover:stroke-red-500 absolute right-3 top-1/2 -translate-y-1/2 bg-gray-50 dark:bg-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-md opacity-70 hover:opacity-100 transition-all duration-200"
+          onClick={(e) => {
+            e.stopPropagation();
             deleteTask(task.id);
           }}
         >
