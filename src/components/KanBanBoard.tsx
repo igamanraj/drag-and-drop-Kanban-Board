@@ -5,8 +5,8 @@ import ColumnContainer from "./ColumnContainer";
 import {
   DndContext,
   DragOverlay,
-  DragStartEvent,
-  DragOverEvent,
+  type DragStartEvent,
+  type DragOverEvent,
   PointerSensor,
   useSensor,
   useSensors,
